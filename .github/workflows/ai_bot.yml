@@ -1,0 +1,40 @@
+name: AI Auto-Commit Bot
+
+on:
+  # Atur jadwal otomatis (misal: setiap jam 8 pagi UTC)
+  schedule:
+    - cron: '0 8 * * *'
+  # Bisa juga dijalankan secara manual dari tab Actions
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Izin agar bot bisa melakukan push ke repo
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install google-generativeai
+
+      - name: Run AI Bot Script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python bot.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "AI Commit Bot"
+          git config --global user.email "bot@users.noreply.github.com"
+          git add .
+          git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 AI Bot: Otomatis update log harian" && git push)
